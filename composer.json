@@ -13,7 +13,8 @@
     "ext-pdo": "*",
     "robmorgan/phinx": "^0.16.6",
     "ext-openssl": "*",
-    "ext-apcu": "*"
+    "ext-apcu": "*",
+    "monolog/monolog": "^3.9"
   },
   "scripts": {
     "phinx": "phinx"
