@@ -1,7 +1,8 @@
-FROM php:8.3-apache
+FROM php:8.4-apache
 
 ARG UID
 ARG GID
+ARG SERVER_NAME
 
 WORKDIR /var/www/html
 

@@ -11,7 +11,6 @@ services:
       traefik.http.routers.apache.rule: Host(`${SERVER_NAME}`)
       traefik.http.routers.apache.entrypoints: websecure
       traefik.http.routers.apache.tls: true
-      traefik.http.routers.apache.tls.certresolver: ${ENVIRONMENT}
     volumes:
       - .:/var/www/html
     env_file:
