@@ -3,7 +3,7 @@
   "type": "project",
   "autoload": {
     "psr-4": {
-      "Meirelles\\BackendBrCryptography\\": "src/"
+      "App\\": "App/"
     }
   },
   "require": {
@@ -19,6 +19,7 @@
     "phinx": "phinx"
   },
   "require-dev": {
-    "symfony/var-dumper": "^7.1"
+    "symfony/var-dumper": "^7.1",
+    "phpstan/phpstan": "^1.12"
   }
 }

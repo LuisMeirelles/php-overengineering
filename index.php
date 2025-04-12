@@ -1,16 +1,16 @@
 <?php
 
-use Meirelles\BackendBrCryptography\Core\AppException;
-use Meirelles\BackendBrCryptography\Core\Environment\EnvLoader;
-use Meirelles\BackendBrCryptography\Core\Request;
-use Meirelles\BackendBrCryptography\Core\Routing\Router;
-use Meirelles\BackendBrCryptography\Exceptions\InternalServerErrorException;
+use App\Core\AppException;
+use App\Core\Environment\EnvLoader;
+use App\Core\Request;
+use App\Core\Routing\Router;
+use App\Exceptions\InternalServerErrorException;
 
 require 'vendor/autoload.php';
 
 $router = Router::getInstance();
 
-require 'src/routes.php';
+require 'App/routes.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = $_SERVER['REQUEST_URI'];
