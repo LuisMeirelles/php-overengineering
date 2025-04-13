@@ -1,5 +1,8 @@
 <?php
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 use App\Core\AppException;
 use App\Core\Environment\EnvLoader;
 use App\Core\Request;
@@ -24,7 +27,7 @@ try {
 } catch (AppException $e) {
     $response = $e->handleResponse();
 } catch (Throwable $throwable) {
-    $response = (new InternalServerErrorException(previous: $throwable))->handleResponse();
+    $response = new InternalServerErrorException(previous: $throwable)->handleResponse();
 }
 
 if ($response !== null) {
