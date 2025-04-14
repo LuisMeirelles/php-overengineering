@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core\Proxy;
 
-use App\Core\Caching\Cache;
 use App\Core\Caching\ApcuCachingStrategy;
+use App\Core\Caching\Cache;
 use ReflectionClass;
+use ReflectionIntersectionType;
 use ReflectionMethod;
+use ReflectionNamedType;
 use ReflectionProperty;
+use ReflectionUnionType;
 
 class Proxy
 {
@@ -94,13 +99,27 @@ class Proxy
                 $attributes[] = $attribute;
             }
 
-            $reflectionIntersectionType = $reflection->getType();
+            $reflectionType = $reflection->getType();
+
+            $getTypeNames = fn($reflectionType) => array_map(fn($type) => $type->getName(), $reflectionType->getTypes());
+
+            $isUnionType = $reflectionType instanceof ReflectionUnionType;
+            $isIntersectionType = $reflectionType instanceof ReflectionIntersectionType;
+            $isSimpleType = $reflectionType instanceof ReflectionNamedType;
+
+            $typeName = match (true) {
+                $isUnionType => implode('|', $getTypeNames($reflectionType)),
+                $isIntersectionType => implode('&', $getTypeNames($reflectionType)),
+                $isSimpleType => $reflectionType->getName(),
+
+                default => 'mixed',
+            };
 
             $metadata[] = new Property(
                 name: $memberName,
-                allowsNull: $reflectionIntersectionType->allowsNull(),
+                allowsNull: $reflectionType->allowsNull(),
                 attributes: $attributes,
-                type: $reflectionIntersectionType->getName(),
+                type: $typeName,
             );
         }
 
