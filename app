@@ -4,7 +4,9 @@
 
 use App\Core\Console\Command\Command;
 
-require_once __DIR__ . '/vendor/autoload.php';
+const BASE_PATH = __DIR__;
+
+include_once BASE_PATH . "/vendor/autoload.php";
 
 const INCORRECT_USAGE = 1;
 const FILE_NOT_FOUND = 2;

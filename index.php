@@ -9,6 +9,8 @@ use App\Core\Request;
 use App\Core\Routing\Router;
 use App\Exceptions\InternalServerErrorException;
 
+const BASE_PATH = __DIR__;
+
 require 'vendor/autoload.php';
 
 $router = Router::getInstance();

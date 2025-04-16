@@ -2,59 +2,56 @@
 
 declare(strict_types=1);
 
-namespace App\Core\Proxy;
-
 use App\Core\Caching\Cache;
 use App\Core\Caching\FileCachingStrategy;
-use ReflectionClass;
-use ReflectionIntersectionType;
-use ReflectionMethod;
-use ReflectionNamedType;
-use ReflectionProperty;
-use ReflectionUnionType;
+use App\Core\Console\Command\Command;
+use App\Core\Proxy\Attributes;
+use App\Core\Proxy\Property;
 
-class Proxy
-{
-    /**
-     * @param ?class-string $className
-     */
-    public static function getCachedClass(?string $className = null): Attributes
+return new class extends Command {
+    public string $description = 'Generate metadata cache';
+
+    public array $parameters = [];
+
+    public function handle(string ...$args): void
     {
+        $this->info('Generating metadata cache...');
+
         $cache = new Cache(new FileCachingStrategy());
 
-        $className ??= static::class;
-        $cacheKey = 'attributes';
+        $map = require BASE_PATH . '/vendor/composer/autoload_psr4.php';
 
-        $attributes = $cache->fetch($cacheKey);
+        $attributes = [];
 
-        $currentAttributes = $attributes[$className] ?? null;
+        foreach ($map as $namespace => $paths) {
+            foreach ($paths as $path) {
+                if (str_starts_with($path, BASE_PATH . '/vendor')) {
+                    continue;
+                }
 
-        if (!$currentAttributes) {
-            $classReflection = new ReflectionClass($className);
+                $classes = self::getAllClassesFromDirectory($path, $namespace);
 
-            $propertiesReflections = $classReflection->getProperties();
-            $methodsReflections = $classReflection->getMethods();
+                foreach ($classes as $className) {
+                    $reflectionClass = new ReflectionClass($className);
 
-            $currentAttributes = new Attributes(
-                attributes: self::getClassAttributes($classReflection),
-                properties: self::getPropertiesMetadata($propertiesReflections),
-                methods: self::getMethodsAttributes($methodsReflections),
-            );
+                    $propertiesReflections = $reflectionClass->getProperties();
+                    $methodsReflections = $reflectionClass->getMethods();
 
-            $attributes[$className] = $currentAttributes;
+                    $attributes[$className] = new Attributes(
+                        attributes: self::getClassAttributes($reflectionClass),
+                        properties: self::getPropertiesMetadata($propertiesReflections),
+                        methods: self::getMethodsAttributes($methodsReflections),
+                    );
+                }
+            }
         }
 
-        $cache->store($cacheKey, $attributes);
-
-        return $currentAttributes;
+        $cache->store('attributes', $attributes);
     }
 
-    /**
-     * @return \Attribute[]
-     */
-    private static function getClassAttributes(ReflectionClass $classReflection): array
+    private static function getClassAttributes(ReflectionClass $reflectionClass): array
     {
-        return array_map(fn($attribute) => $attribute->newInstance(), $classReflection->getAttributes());
+        return array_map(fn($attribute) => $attribute->newInstance(), $reflectionClass->getAttributes());
     }
 
     /**
@@ -129,4 +126,26 @@ class Proxy
 
         return $metadata;
     }
-}
+
+    static function getAllClassesFromDirectory(string $baseDir, string $baseNamespace = ''): array
+    {
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($baseDir));
+        $classes = [];
+
+        foreach ($rii as $file) {
+            if (!$file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $relativePath = str_replace([$baseDir . '/', '.php'], '', $file->getPathname());
+            $relativePath = str_replace('/', '\\', $relativePath);
+            $class = $baseNamespace . $relativePath;
+
+            if (class_exists($class) || trait_exists($class) || interface_exists($class)) {
+                $classes[] = $class;
+            }
+        }
+
+        return $classes;
+    }
+};

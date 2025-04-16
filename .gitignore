@@ -1,3 +1,6 @@
-vendor
+vendor/
 .env
-.idea
+.idea/
+
+storage/**/**
+!storage/**/.gitkeep

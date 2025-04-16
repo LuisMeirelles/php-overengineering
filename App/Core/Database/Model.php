@@ -2,6 +2,8 @@
 
 namespace App\Core\Database;
 
+use App\Core\Caching\Cache;
+use App\Core\Caching\FileCachingStrategy;
 use JsonSerializable;
 use App\Core\AppException;
 use ReflectionAttribute;
@@ -125,12 +127,14 @@ class Model implements JsonSerializable
      */
     public function toArray(): array
     {
+        $cache = new Cache(new FileCachingStrategy());
+
         $class = static::class;
         $cacheKey = "{$class}_properties";
 
-        $mappedProperties = apcu_fetch($cacheKey);
+        $mappedProperties = $cache->fetch($cacheKey);
 
-        if ($mappedProperties === false) {
+        if (!$mappedProperties) {
             $reflection = new ReflectionClass($this);
 
             $propertiesReflections = $reflection->getProperties();
@@ -145,7 +149,7 @@ class Model implements JsonSerializable
                 }
             }
 
-            apcu_store($cacheKey, $mappedProperties);
+            $cache->store($cacheKey, $mappedProperties);
         }
 
         $properties = [];
@@ -197,11 +201,13 @@ class Model implements JsonSerializable
      */
     public static function getTableName(): string
     {
+        $cache = new Cache(new FileCachingStrategy());
+
         $class = static::class;
         $cacheKey = "{$class}_table_name";
-        $tableName = apcu_fetch($cacheKey);
+        $tableName = $cache->fetch($cacheKey);
 
-        if ($tableName === false) {
+        if (!$tableName) {
             $reflection = new ReflectionClass(static::class);
             $className = $reflection->getShortName();
 
@@ -210,7 +216,7 @@ class Model implements JsonSerializable
             $inflector = new EnglishInflector();
             $tableName = $inflector->pluralize($snakeCaseName)[0];
 
-            apcu_store($cacheKey, $tableName);
+            $cache->store($cacheKey, $tableName);
         }
 
         return $tableName;
